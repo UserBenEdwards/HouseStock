@@ -34,11 +34,31 @@ public class ApplianceCategoryRepository(AppDbContext context) : IApplianceCateg
             .AnyAsync(c => c.Name.ToLower() == name.ToLower());
     }
 
+    public async Task<bool> HasAppliancesAsync(int id)
+    {
+        return await context.Appliances.AnyAsync(a => a.CategoryId == id);
+    }
+
     public async Task AddAsync(ApplianceCategory category)
     {
         category.CreatedAt = DateTime.UtcNow;
         category.UpdatedAt = DateTime.UtcNow;
         await context.ApplianceCategories.AddAsync(category);
+        await context.SaveChangesAsync();
+    }
+
+    public async Task UpdateAsync(ApplianceCategory category)
+    {
+        category.UpdatedAt = DateTime.UtcNow;
+        context.ApplianceCategories.Update(category);
+        await context.SaveChangesAsync();
+    }
+
+    public async Task DeleteAsync(int id)
+    {
+        var category = await context.ApplianceCategories.FindAsync(id);
+        if (category is null) return;
+        context.ApplianceCategories.Remove(category);
         await context.SaveChangesAsync();
     }
 }

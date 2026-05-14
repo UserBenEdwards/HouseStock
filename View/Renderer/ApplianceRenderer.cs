@@ -65,6 +65,33 @@ public static class ApplianceRenderer
         Console.WriteLine("  " + new string('-', total));
     }
 
+    public static void RenderCategoryTable(IEnumerable<ApplianceCategory> categories)
+    {
+        var list = categories.ToList();
+        if (list.Count == 0)
+        {
+            Console.WriteLine("  No categories found.");
+            return;
+        }
+
+        Console.WriteLine("  " + new string('-', 55));
+        Console.WriteLine($"  {"#",-5}| {"ID",-6}| {"Name",-25}| Description");
+        Console.WriteLine("  " + new string('-', 55));
+
+        for (int i = 0; i < list.Count; i++)
+        {
+            var c = list[i];
+            Console.WriteLine(
+                $"  {(i + 1).ToString(),-5}" +
+                $"| {c.Id.ToString(),-6}" +
+                $"| {Truncate(c.Name, 25),-25}" +
+                $"| {Truncate(c.Description ?? "—", 30)}");
+        }
+
+        Console.WriteLine("  " + new string('-', 55));
+        Console.WriteLine($"  Total: {list.Count} category(ies)");
+    }
+
     private static string Truncate(string value, int max) =>
         value.Length <= max ? value : value[..(max - 3)] + "...";
 }

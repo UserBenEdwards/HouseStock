@@ -10,24 +10,32 @@ public class AdminCommandProvider(
     ShowCommand showCommand,
     CostCommand costCommand,
     AdminHelpCommand adminHelpCommand,
+    ListCategoriesCommand listCategoriesCommand,
     AddApplianceCommand addCommand,
     UpdateApplianceCommand updateCommand,
     DeleteApplianceCommand deleteCommand,
+    AddCategoryCommand addCategoryCommand,
+    UpdateCategoryCommand updateCategoryCommand,
+    DeleteCategoryCommand deleteCategoryCommand,
     SwitchToUserCommand switchToUserCommand,
     ExitCommand exitCommand,
     WrongCommand wrongCommand)
 {
     public ICommand Resolve(ParsedRequest request) => request.CommandName switch
     {
-        "find"   => findCommand,
-        "show"   => showCommand,
-        "cost"   => costCommand,
-        "help"   => adminHelpCommand,
-        "add"    => addCommand,
-        "update" => updateCommand,
-        "delete" => deleteCommand,
-        "switch" => switchToUserCommand,
-        "exit"   => exitCommand,
-        _        => wrongCommand
+        "find"            => findCommand,
+        "show"            => showCommand,
+        "cost"            => costCommand,
+        "help"            => adminHelpCommand,
+        "categories"      => listCategoriesCommand,
+        "add"             => addCommand,
+        "update"          => updateCommand,
+        "delete"          => deleteCommand,
+        "add-category"    => addCategoryCommand,
+        "update-category" => updateCategoryCommand,
+        "delete-category" => deleteCategoryCommand,
+        "switch"          => switchToUserCommand,
+        "exit"            => exitCommand,
+        _                 => wrongCommand
     };
 }

@@ -1,13 +1,15 @@
 using AppController;
 using AppController.Controllers;
 using Domain.Entities;
+using Service.Interfaces;
 using View.Renderer;
 
 namespace View;
 
 public class ConsolePresentation(
     QueryController controller,
-    AppSession session)
+    AppSession session,
+    ICategoryService categoryService)
 {
     public async Task RunAsync()
     {
@@ -27,9 +29,15 @@ public class ConsolePresentation(
 
             // Команды требующие интерактивного ввода
             if (input.Equals("add", StringComparison.OrdinalIgnoreCase) && session.IsAdmin)
-                result = await HandleAddAsync();
-            else if (input.StartsWith("update", StringComparison.OrdinalIgnoreCase) && session.IsAdmin)
-                result = await HandleUpdateAsync(input);
+                result = await HandleAddApplianceAsync();
+            else if (input.StartsWith("update ", StringComparison.OrdinalIgnoreCase) && session.IsAdmin)
+                result = await HandleUpdateApplianceAsync(input);
+            else if (input.Equals("add-category", StringComparison.OrdinalIgnoreCase) && session.IsAdmin)
+                result = await HandleAddCategoryAsync();
+            else if (input.StartsWith("update-category ", StringComparison.OrdinalIgnoreCase) && session.IsAdmin)
+                result = await HandleUpdateCategoryAsync(input);
+            else if (input.StartsWith("delete-category ", StringComparison.OrdinalIgnoreCase) && session.IsAdmin)
+                result = await HandleDeleteCategoryAsync(input);
             else if (input.Equals("switch admin", StringComparison.OrdinalIgnoreCase))
                 result = await HandleSwitchAdminAsync();
             else
@@ -42,42 +50,48 @@ public class ConsolePresentation(
         }
     }
 
-    // ── Интерактивные обработчики ──────────────────────────────────────────
+    // ── Appliance handlers ─────────────────────────────────────────────────
 
-    private async Task<CommandResult> HandleAddAsync()
+    private async Task<CommandResult> HandleAddApplianceAsync()
     {
         Console.WriteLine("\n  -- Add new appliance --");
+
         var name = Prompt("  Name");
+        if (string.IsNullOrWhiteSpace(name))
+            return CommandResult.Fail("Name cannot be empty.");
+
         var description = Prompt("  Description (optional, Enter to skip)");
         var priceStr = Prompt("  Price");
-        var category = Prompt("  Category (optional, Enter to skip)");
+
+        var categoryName = await PickCategoryAsync();
 
         return await controller.ExecuteWithArgsAsync("add", new Dictionary<string, string>
         {
             ["name"]        = name,
-            ["description"] = string.IsNullOrWhiteSpace(description) ? "" : description,
+            ["description"] = description,
             ["price"]       = priceStr,
-            ["category"]    = string.IsNullOrWhiteSpace(category) ? "" : category
+            ["category"]    = categoryName
         });
     }
 
-    private async Task<CommandResult> HandleUpdateAsync(string input)
+    private async Task<CommandResult> HandleUpdateApplianceAsync(string input)
     {
         var parts = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         if (parts.Length < 2 || !int.TryParse(parts[1], out var id))
             return CommandResult.Fail("Invalid ID. Usage: update <id>");
 
-        // Сначала покажем текущие данные
+        // Показываем текущие данные
         var currentResult = await controller.ExecuteAsync($"show {id}");
         if (!currentResult.Success)
             return currentResult;
         Render(currentResult);
 
         Console.WriteLine("\n  -- Update appliance (Enter to keep current value) --");
+
         var name = Prompt("  New name");
         var description = Prompt("  New description");
         var priceStr = Prompt("  New price");
-        var category = Prompt("  New category");
+        var categoryName = await PickCategoryAsync(allowSkip: true);
 
         return await controller.ExecuteWithArgsAsync("update", new Dictionary<string, string>
         {
@@ -85,9 +99,104 @@ public class ConsolePresentation(
             ["name"]        = name,
             ["description"] = description,
             ["price"]       = priceStr,
-            ["category"]    = category
+            ["category"]    = categoryName
         });
     }
+
+    // ── Category handlers ──────────────────────────────────────────────────
+
+    private async Task<CommandResult> HandleAddCategoryAsync()
+    {
+        Console.WriteLine("\n  -- Add new category --");
+        var name = Prompt("  Name");
+        if (string.IsNullOrWhiteSpace(name))
+            return CommandResult.Fail("Name cannot be empty.");
+
+        var description = Prompt("  Description (optional, Enter to skip)");
+
+        return await controller.ExecuteWithArgsAsync("add-category", new Dictionary<string, string>
+        {
+            ["name"]        = name,
+            ["description"] = description
+        });
+    }
+
+    private async Task<CommandResult> HandleUpdateCategoryAsync(string input)
+    {
+        var parts = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length < 2 || !int.TryParse(parts[1], out var id))
+            return CommandResult.Fail("Invalid ID. Usage: update-category <id>");
+
+        // Показываем текущие категории
+        var listResult = await controller.ExecuteAsync("categories");
+        Render(listResult);
+
+        Console.WriteLine("\n  -- Update category --");
+        var name = Prompt("  New name");
+        if (string.IsNullOrWhiteSpace(name))
+            return CommandResult.Fail("Name cannot be empty.");
+
+        var description = Prompt("  New description");
+
+        return await controller.ExecuteWithArgsAsync("update-category", new Dictionary<string, string>
+        {
+            ["id"]          = id.ToString(),
+            ["name"]        = name,
+            ["description"] = description
+        });
+    }
+
+    private async Task<CommandResult> HandleDeleteCategoryAsync(string input)
+    {
+        var parts = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length < 2 || !int.TryParse(parts[1], out var id))
+            return CommandResult.Fail("Invalid ID. Usage: delete-category <id>");
+
+        Console.Write($"\n  Are you sure you want to delete category #{id}? (y/N): ");
+        var confirm = Console.ReadLine()?.Trim().ToLower();
+        if (confirm != "y")
+            return CommandResult.Fail("Deletion cancelled.");
+
+        return await controller.ExecuteWithArgsAsync("delete-category", new Dictionary<string, string>
+        {
+            ["id"] = id.ToString()
+        });
+    }
+
+    // ── Category picker ────────────────────────────────────────────────────
+
+    private async Task<string> PickCategoryAsync(bool allowSkip = false)
+    {
+        var categories = (await categoryService.GetAllAsync()).ToList();
+
+        if (categories.Count == 0)
+        {
+            Console.WriteLine("  (No categories available)");
+            return string.Empty;
+        }
+
+        Console.WriteLine("\n  Available categories:");
+        for (int i = 0; i < categories.Count; i++)
+            Console.WriteLine($"    {i + 1}. {categories[i].Name}");
+
+        var skipNote = allowSkip ? ", 0 to remove category" : ", 0 to skip";
+        Console.Write($"  Select category (1-{categories.Count}{skipNote}): ");
+
+        var input = Console.ReadLine()?.Trim() ?? string.Empty;
+
+        if (!int.TryParse(input, out var choice) || choice == 0)
+            return string.Empty;
+
+        if (choice < 1 || choice > categories.Count)
+        {
+            Console.WriteLine("  Invalid choice. No category will be assigned.");
+            return string.Empty;
+        }
+
+        return categories[choice - 1].Name;
+    }
+
+    // ── Auth handler ───────────────────────────────────────────────────────
 
     private async Task<CommandResult> HandleSwitchAdminAsync()
     {
@@ -101,7 +210,7 @@ public class ConsolePresentation(
         });
     }
 
-    // ── Рендеринг результата ───────────────────────────────────────────────
+    // ── Renderer ───────────────────────────────────────────────────────────
 
     private static void Render(CommandResult result)
     {
@@ -121,15 +230,20 @@ public class ConsolePresentation(
             return;
         }
 
-        if (result.Data is IEnumerable<Appliance> list)
+        if (result.Data is IEnumerable<Appliance> applianceList)
         {
             Console.WriteLine($"\n  {result.Message}");
-            ApplianceRenderer.RenderTable(list);
+            ApplianceRenderer.RenderTable(applianceList);
         }
         else if (result.Data is Appliance appliance)
         {
             Console.WriteLine($"\n  {result.Message}");
             ApplianceRenderer.RenderDetail(appliance);
+        }
+        else if (result.Data is IEnumerable<ApplianceCategory> categories)
+        {
+            Console.WriteLine($"\n  {result.Message}");
+            ApplianceRenderer.RenderCategoryTable(categories);
         }
         else
         {
@@ -139,7 +253,7 @@ public class ConsolePresentation(
         }
     }
 
-    // ── Вспомогательные методы ─────────────────────────────────────────────
+    // ── Helpers ────────────────────────────────────────────────────────────
 
     private static string Prompt(string label)
     {

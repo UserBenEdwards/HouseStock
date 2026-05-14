@@ -7,10 +7,16 @@ public class AdminHelpCommand : ICommand
     private const string HelpText = """
         === Available Commands (Admin Mode) ===
 
-        Admin commands:
+        Appliance commands:
           add                       — Add a new appliance
           update <id>               — Update an appliance by ID
           delete <id>               — Delete an appliance by ID
+
+        Category commands:
+          categories                — List all categories
+          add-category              — Add a new category
+          update-category <id>      — Update a category by ID
+          delete-category <id>      — Delete a category by ID
 
         Query commands:
           find all                  — Find all appliances

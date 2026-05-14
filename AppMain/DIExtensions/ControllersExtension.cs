@@ -24,6 +24,7 @@ public static class ControllersExtension
         services.AddTransient<ShowCommand>();
         services.AddTransient<CostCommand>();
         services.AddTransient<HelpCommand>();
+        services.AddTransient<ListCategoriesCommand>();
         services.AddTransient<SwitchToAdminCommand>();
         services.AddTransient<WrongCommand>();
 
@@ -33,6 +34,9 @@ public static class ControllersExtension
         services.AddTransient<DeleteApplianceCommand>();
         services.AddTransient<AdminHelpCommand>();
         services.AddTransient<SwitchToUserCommand>();
+        services.AddTransient<AddCategoryCommand>();
+        services.AddTransient<UpdateCategoryCommand>();
+        services.AddTransient<DeleteCategoryCommand>();
 
         // System commands
         services.AddTransient<ExitCommand>();
