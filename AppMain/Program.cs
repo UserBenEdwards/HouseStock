@@ -18,9 +18,10 @@ var host = Host.CreateDefaultBuilder(args)
     })
     .Build();
 
-// Применяем миграции при старте
+// Применяем миграции и заполняем БД при первом запуске
 var db = host.Services.GetRequiredService<AppDbContext>();
 await db.Database.MigrateAsync();
+await DbSeeder.SeedAsync(db);
 
 // Запускаем консольный цикл
 var presentation = host.Services.GetRequiredService<ConsolePresentation>();
