@@ -3,7 +3,7 @@
 Console application for managing a household appliances warehouse.
 Built with C# / .NET 8 following clean layered architecture principles.
 
-**Course:** SE214 · **Stack:** .NET 8 · EF Core 9 · MySQL 8 · xUnit + Moq · Serilog → Seq
+**Stack:** .NET 8 · EF Core 9 · MySQL 8 · xUnit + Moq · Serilog → Seq
 
 ---
 
@@ -79,7 +79,6 @@ dotnet test
 | `find all` | List all appliances |
 | `find <category>` | Filter by category name |
 | `find all price=min;max` | Filter by price range |
-| `find <category> price=min;max` | Filter by category and price |
 | `show <id>` | Show appliance details |
 | `cost <min> <max>` | Appliances in price range |
 | `stats` | Warehouse statistics (totals, min/max/avg price) |

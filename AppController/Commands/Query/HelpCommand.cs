@@ -11,8 +11,9 @@ public class HelpCommand : ICommand
           find all                  — Find all appliances
           find <category>           — Find appliances by category
           find all price=min;max    — Find appliances by price range
-          cost <min> <max>          — Find appliances by price range
+          cost <min> <max>          — Alias for find all price=min;max
           show <id>                 — Show appliance details by ID
+          categories                — List all categories
           stats                     — Show warehouse statistics
 
         Mode commands:
