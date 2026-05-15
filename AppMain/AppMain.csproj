@@ -28,6 +28,9 @@
       <Content Include="..\compose.yaml">
         <Link>compose.yaml</Link>
       </Content>
+      <Content Include="..\README.md">
+        <Link>README.md</Link>
+      </Content>
       <Content Include="appsettings.json">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </Content>

@@ -211,6 +211,73 @@ HousestockException
 | `SpecificationTests` | Unit | 22 |
 | `ValidatorTests` | Unit | 15 |
 | `ApplianceIntegrationTests` | Integration | 7 |
-| `ControllerIntegrationTests` | Integration | 8 |
+| `ControllerIntegrationTests` | Integration | 9 |
 
 Unit tests use **Moq** for isolation. Integration tests run a full DI stack with **EF Core InMemory** — each test gets an isolated database via a unique `Guid`.
+
+---
+
+## Stage 2 — Grading Checklist
+
+### Mandatory Requirements
+
+> Violation of any → score = **0**
+
+| # | Requirement | Status |
+|---|-------------|--------|
+| 1 | **Layered (Clean) Architecture** — UI does not call DB/repositories directly | ✅ |
+| 2 | **No Unauthorized Frameworks** — only .NET, EF Core, `Microsoft.Extensions.*`, xUnit, Moq | ✅ |
+| 3 | **Role-Based Access** — USER (read-only) and ADMIN (full CRUD) with password auth | ✅ |
+| 4 | **Modifiable Storage** — EF Core Code First + Migrations + MySQL 8 | ✅ |
+| 5 | **Dependency Injection** — all services and repositories registered via `Microsoft.Extensions.DI`; no `new` in business layers | ✅ |
+| 6 | **Asynchronous Programming** — all I/O uses async/await; no `.Result()` or `.Wait()` | ✅ |
+| 7 | **Configuration Management** — connection string and admin password in `appsettings.json` via `IOptions<T>` | ✅ |
+| 8 | **Unit Testing** — automated unit tests for business logic | ✅ |
+
+---
+
+### Base Score — max 280 pts
+
+| Criterion | Max pts | Status |
+|-----------|---------|--------|
+| **Domain Layer** — correct domain model, relationships, invariants | 25 | ✅ |
+| **Infrastructure Layer** — EF Core repositories, CRUD, migrations | 50 | ✅ |
+| **Service Layer** — business logic in services, not controllers/UI | 25 | ✅ |
+| **Controller Layer** — command routing separated from business rules | 25 | ✅ |
+| **View Layer** — unauthorized actions hidden/blocked, well-structured interaction | 25 | ✅ |
+| **Asynchronous Programming** — async/await consistent across all I/O | 40 | ✅ |
+| **Main / Composition Root** — DI registration, composition, initialization | 25 | ✅ |
+| **Unit Testing** — coverage, mocks (Moq), assertion clarity | 35 | ✅ |
+| **Integration Testing** — Controller → Service → Repository end-to-end | 30 | ✅ |
+| **Total** | **280** | |
+
+---
+
+### Penalties — max 105 pts deducted
+
+| Criteria | Max Deducted | Status |
+|----------|-------------|--------|
+| Missing/incomplete mandatory requirements | 10 | ✅ none |
+| No DB storage | 20 | ✅ MySQL via EF Core |
+| Copy-paste code | 20 | ✅ avoided |
+| Same source for tests and main code | 5 | ✅ separate `Test` project |
+| No mock objects in tests | 5 | ✅ Moq used |
+| Breaking naming conventions | 5 | ✅ followed |
+| Unreadable code | 10 | ✅ clean |
+
+---
+
+### Bonuses — max 60 pts
+
+| Criteria | Max pts | Status |
+|----------|---------|--------|
+| **Logging** — Serilog → Seq | 10 | ✅ |
+| **Additional design patterns** — **Specification** (`ISpecification<T>`, `AndSpecification<T>`, `OrSpecification<T>` with `.And()`/`.Or()` extension combinators used for category and price-range filtering); **Command** (each user action is a dedicated `ICommand` class resolved by `AdminCommandProvider`/`QueryCommandProvider`); **Repository** (`IApplianceRepository`, `ICategoryRepository` — service layer works only through interfaces); **Options Pattern** (`AuthOptions` bound to `appsettings.json` via `IOptions<T>`, no hard-coded settings) | 10 | ✅ |
+| **Input validation (Fluent API)** — `Validator<T>.For(dto).NotNullOrEmpty().MaxLength().GreaterThan().Validate()` | 10 | ✅ |
+| **Advanced exception handling** — `HousestockException` hierarchy: `ValidationException`, `PersistenceException`, `ApplianceNotFoundException`, `CategoryNotFoundException`, `DuplicateApplianceException`, `DuplicateCategoryException` | 5 | ✅ |
+| **Different testing techniques** — `[Fact]`, `[Theory]`, `[InlineData]`, `[MemberData]`, `[ClassData]` | 5 | ✅ |
+| **Transaction management** — `DbSeeder.SeedAsync` wrapped in `BeginTransactionAsync` / `CommitAsync` | 5 | ✅ |
+| **Connection pooling** — MySqlConnector: min=2, max=100, lifetime=300 s | 5 | ✅ |
+| **More than one implementation** — `ApplianceRepository` (EF Core) + `InMemoryApplianceRepository` (List\<T\>) | 5 | ✅ |
+| **Original features** — `stats` command (total count, min/max/avg price) | 5 | ✅ |
+| **Total** | **60** | |
