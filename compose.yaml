@@ -18,9 +18,10 @@ services:
     container_name: seq_logs
     environment:
       ACCEPT_EULA: "Y"
+      SEQ_FIRSTRUN_ADMINPASSWORD: "admin123"
     ports:
-      - "5341:5341"   # Serilog sink endpoint
-      - "8080:80"     # Seq web UI  →  http://localhost:8080
+      - "5340:5341"   # Serilog sink endpoint
+      - "15341:80"    # Seq web UI  →  http://localhost:15341
     volumes:
       - seq_data:/data
     restart: unless-stopped
