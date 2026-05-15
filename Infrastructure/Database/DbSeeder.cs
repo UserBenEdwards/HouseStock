@@ -11,6 +11,11 @@ public static class DbSeeder
         if (await context.ApplianceCategories.AnyAsync())
             return;
 
+        // Explicit transaction: categories and appliances must be seeded atomically.
+        // If appliance insert fails after categories are saved, the DB would be left
+        // in an inconsistent state (categories present, no appliances).
+        await using var tx = await context.Database.BeginTransactionAsync();
+
         var now = DateTime.UtcNow;
 
         var categories = new List<ApplianceCategory>
@@ -55,6 +60,8 @@ public static class DbSeeder
 
         context.Appliances.AddRange(appliances);
         await context.SaveChangesAsync();
+
+        await tx.CommitAsync();
 
         Console.ForegroundColor = ConsoleColor.DarkGray;
         Console.WriteLine("  [Seed] Database seeded with initial data.");

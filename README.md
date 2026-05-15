@@ -103,6 +103,27 @@ dotnet test
 
 ---
 
+## Transaction Management
+
+`DbSeeder.SeedAsync` wraps the entire initial data load in an **explicit transaction**:
+
+```csharp
+await using var tx = await context.Database.BeginTransactionAsync();
+
+context.ApplianceCategories.AddRange(categories);
+await context.SaveChangesAsync();   // save categories
+
+context.Appliances.AddRange(appliances);
+await context.SaveChangesAsync();   // save appliances
+
+await tx.CommitAsync();             // commit both or rollback all
+```
+
+Without the transaction, a failure between the two `SaveChangesAsync` calls would leave categories committed but appliances missing — an inconsistent DB state.
+All other write operations (Add, Update, Delete) are single `SaveChangesAsync` calls, which EF Core already wraps in an implicit transaction automatically.
+
+---
+
 ## Architecture
 
 ```
