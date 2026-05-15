@@ -1,6 +1,7 @@
 using Domain.Entities;
 using Domain.Exceptions;
 using Domain.Interfaces;
+using Microsoft.Extensions.Logging;
 using Service.DTOs;
 using Service.Interfaces;
 
@@ -8,7 +9,8 @@ namespace Service.Services;
 
 public class ApplianceService(
     IApplianceRepository applianceRepository,
-    IApplianceCategoryRepository categoryRepository) : IApplianceService
+    IApplianceCategoryRepository categoryRepository,
+    ILogger<ApplianceService> logger) : IApplianceService
 {
     public async Task<IEnumerable<Appliance>> GetAllAsync()
     {
@@ -29,7 +31,10 @@ public class ApplianceService(
     {
         var appliance = await applianceRepository.GetByIdAsync(id);
         if (appliance is null)
+        {
+            logger.LogWarning("Appliance #{Id} not found", id);
             throw new ApplianceNotFoundException(id);
+        }
 
         return appliance;
     }
@@ -37,14 +42,20 @@ public class ApplianceService(
     public async Task AddAsync(AddApplianceRequest request)
     {
         if (await applianceRepository.ExistsAsync(request.Name))
+        {
+            logger.LogWarning("Duplicate appliance name: '{Name}'", request.Name);
             throw new DuplicateApplianceException(request.Name);
+        }
 
         int? categoryId = null;
         if (request.CategoryName is not null)
         {
             var category = await categoryRepository.GetByNameAsync(request.CategoryName);
             if (category is null)
+            {
+                logger.LogWarning("Category '{Name}' not found while adding appliance", request.CategoryName);
                 throw new CategoryNotFoundException(request.CategoryName);
+            }
 
             categoryId = category.Id;
         }
@@ -58,18 +69,22 @@ public class ApplianceService(
         };
 
         await applianceRepository.AddAsync(appliance);
+        logger.LogInformation("Appliance '{Name}' added (price: {Price})", appliance.Name, appliance.Price);
     }
 
     public async Task UpdateAsync(UpdateApplianceRequest request)
     {
         var appliance = await applianceRepository.GetByIdAsync(request.Id);
         if (appliance is null)
+        {
+            logger.LogWarning("Appliance #{Id} not found for update", request.Id);
             throw new ApplianceNotFoundException(request.Id);
+        }
 
-        // Проверяем дубликат только если имя изменилось
         if (!appliance.Name.Equals(request.Name, StringComparison.OrdinalIgnoreCase)
             && await applianceRepository.ExistsAsync(request.Name))
         {
+            logger.LogWarning("Duplicate appliance name on update: '{Name}'", request.Name);
             throw new DuplicateApplianceException(request.Name);
         }
 
@@ -78,7 +93,10 @@ public class ApplianceService(
         {
             var category = await categoryRepository.GetByNameAsync(request.CategoryName);
             if (category is null)
+            {
+                logger.LogWarning("Category '{Name}' not found while updating appliance", request.CategoryName);
                 throw new CategoryNotFoundException(request.CategoryName);
+            }
 
             categoryId = category.Id;
         }
@@ -89,14 +107,19 @@ public class ApplianceService(
         appliance.CategoryId = categoryId;
 
         await applianceRepository.UpdateAsync(appliance);
+        logger.LogInformation("Appliance #{Id} updated", appliance.Id);
     }
 
     public async Task DeleteAsync(int id)
     {
         var appliance = await applianceRepository.GetByIdAsync(id);
         if (appliance is null)
+        {
+            logger.LogWarning("Appliance #{Id} not found for deletion", id);
             throw new ApplianceNotFoundException(id);
+        }
 
         await applianceRepository.DeleteAsync(id);
+        logger.LogInformation("Appliance #{Id} deleted", id);
     }
 }

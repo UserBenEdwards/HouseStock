@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
 using Service.Options;
@@ -11,7 +12,8 @@ public class AuthServiceTests
     {
         var options = new Mock<IOptions<AuthOptions>>();
         options.Setup(o => o.Value).Returns(new AuthOptions { AdminPassword = adminPassword });
-        return new AuthService(options.Object);
+        var logger = new Mock<ILogger<AuthService>>();
+        return new AuthService(options.Object, logger.Object);
     }
 
     [Fact]

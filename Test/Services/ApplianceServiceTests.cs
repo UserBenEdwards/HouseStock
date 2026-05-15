@@ -1,6 +1,7 @@
 using Domain.Entities;
 using Domain.Exceptions;
 using Domain.Interfaces;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Service.DTOs;
 using Service.Services;
@@ -11,9 +12,10 @@ public class ApplianceServiceTests
 {
     private readonly Mock<IApplianceRepository> _repoMock = new();
     private readonly Mock<IApplianceCategoryRepository> _categoryRepoMock = new();
+    private readonly Mock<ILogger<ApplianceService>> _loggerMock = new();
 
     private ApplianceService CreateService() =>
-        new(_repoMock.Object, _categoryRepoMock.Object);
+        new(_repoMock.Object, _categoryRepoMock.Object, _loggerMock.Object);
 
     // ── GetAllAsync ────────────────────────────────────────────────────────
 
