@@ -29,7 +29,8 @@ public class UpdateCategoryCommand(
             logger.LogInformation("Category #{Id} updated by admin", id);
             return CommandResult.Ok($"Category #{id} updated successfully.");
         }
-        catch (CategoryNotFoundException ex) { return CommandResult.Fail(ex.Message); }
-        catch (DuplicateApplianceException ex) { return CommandResult.Fail(ex.Message); }
+        catch (ValidationException ex)        { return CommandResult.Fail(ex.Message); }
+        catch (CategoryNotFoundException ex)  { return CommandResult.Fail(ex.Message); }
+        catch (DuplicateCategoryException ex) { return CommandResult.Fail(ex.Message); }
     }
 }

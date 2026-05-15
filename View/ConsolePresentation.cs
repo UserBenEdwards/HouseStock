@@ -61,7 +61,7 @@ public class ConsolePresentation(
         var description = Prompt("  Description (optional, Enter to skip)");
         var priceStr = Prompt("  Price");
 
-        var categoryName = await PickCategoryAsync();
+        var categoryName = await PickCategoryAsync() ?? string.Empty;
 
         return await controller.ExecuteWithArgsAsync("add", new Dictionary<string, string>
         {
@@ -84,12 +84,21 @@ public class ConsolePresentation(
             return currentResult;
         Render(currentResult);
 
+        var current = currentResult.Data as Appliance;
+
         Console.WriteLine("\n  -- Update appliance (Enter to keep current value) --");
 
-        var name = Prompt("  New name");
-        var description = Prompt("  New description");
-        var priceStr = Prompt("  New price");
-        var categoryName = await PickCategoryAsync(allowSkip: true);
+        var nameInput  = Prompt("  New name");
+        var descInput  = Prompt("  New description");
+        var priceInput = Prompt("  New price");
+        var pickedCategory = await PickCategoryAsync(allowSkip: true);
+
+        var name        = string.IsNullOrWhiteSpace(nameInput)  ? current?.Name        ?? string.Empty : nameInput;
+        var description = string.IsNullOrWhiteSpace(descInput)  ? current?.Description ?? string.Empty : descInput;
+        var priceStr    = string.IsNullOrWhiteSpace(priceInput) ?
+            current?.Price.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? priceInput : priceInput;
+        // null = keep existing; "" = explicit removal; "Name" = set new
+        var category    = pickedCategory is null ? current?.Category?.Name ?? string.Empty : pickedCategory;
 
         return await controller.ExecuteWithArgsAsync("update", new Dictionary<string, string>
         {
@@ -97,7 +106,7 @@ public class ConsolePresentation(
             ["name"]        = name,
             ["description"] = description,
             ["price"]       = priceStr,
-            ["category"]    = categoryName
+            ["category"]    = category
         });
     }
 
@@ -125,16 +134,18 @@ public class ConsolePresentation(
         if (parts.Length < 2 || !int.TryParse(parts[1], out var id))
             return CommandResult.Fail("Invalid ID. Usage: update-category <id>");
 
-        // Показываем текущие категории
         var listResult = await controller.ExecuteAsync("categories");
         Render(listResult);
 
-        Console.WriteLine("\n  -- Update category --");
-        var name = Prompt("  New name");
-        if (string.IsNullOrWhiteSpace(name))
-            return CommandResult.Fail("Name cannot be empty.");
+        var current = (listResult.Data as IEnumerable<ApplianceCategory>)
+            ?.FirstOrDefault(c => c.Id == id);
 
-        var description = Prompt("  New description");
+        Console.WriteLine("\n  -- Update category (Enter to keep current value) --");
+        var nameInput = Prompt("  New name");
+        var descInput = Prompt("  New description");
+
+        var name        = string.IsNullOrWhiteSpace(nameInput) ? current?.Name        ?? string.Empty : nameInput;
+        var description = string.IsNullOrWhiteSpace(descInput) ? current?.Description ?? string.Empty : descInput;
 
         return await controller.ExecuteWithArgsAsync("update-category", new Dictionary<string, string>
         {
@@ -163,7 +174,8 @@ public class ConsolePresentation(
 
     // ── Category picker ────────────────────────────────────────────────────
 
-    private async Task<string> PickCategoryAsync(bool allowSkip = false)
+    // Returns: null = no selection made (keep existing), "" = explicit removal (0), "Name" = chosen
+    private async Task<string?> PickCategoryAsync(bool allowSkip = false)
     {
         var categoriesResult = await controller.ExecuteAsync("categories");
         var categories = (categoriesResult.Data as IEnumerable<ApplianceCategory>)?.ToList()
@@ -172,17 +184,20 @@ public class ConsolePresentation(
         if (categories.Count == 0)
         {
             Console.WriteLine("  (No categories available)");
-            return string.Empty;
+            return null;
         }
 
         Console.WriteLine("\n  Available categories:");
         for (int i = 0; i < categories.Count; i++)
             Console.WriteLine($"    {i + 1}. {categories[i].Name}");
 
-        var skipNote = allowSkip ? ", 0 to remove category" : ", 0 to skip";
+        var skipNote = allowSkip ? ", 0 to remove, Enter to keep" : ", 0 to skip";
         Console.Write($"  Select category (1-{categories.Count}{skipNote}): ");
 
         var input = Console.ReadLine()?.Trim() ?? string.Empty;
+
+        if (string.IsNullOrEmpty(input))
+            return null;
 
         if (!int.TryParse(input, out var choice) || choice == 0)
             return string.Empty;

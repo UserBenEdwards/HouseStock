@@ -1,6 +1,6 @@
 namespace Domain.Exceptions;
 
-public class DuplicateCategoryException : Exception
+public class DuplicateCategoryException : HousestockException
 {
     public string Name { get; }
 

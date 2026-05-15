@@ -1,3 +1,4 @@
+using System.Globalization;
 using AppController.Commands;
 using Domain.Exceptions;
 using Microsoft.Extensions.Logging;
@@ -25,7 +26,7 @@ public class UpdateApplianceCommand(
         if (string.IsNullOrWhiteSpace(name))
             return CommandResult.Fail("Name is required.");
 
-        if (!decimal.TryParse(priceStr, out var price) || price < 0)
+        if (!decimal.TryParse(priceStr, NumberStyles.Number, CultureInfo.InvariantCulture, out var price) || price < 0)
             return CommandResult.Fail("Invalid price.");
 
         try
@@ -41,8 +42,10 @@ public class UpdateApplianceCommand(
             logger.LogInformation("Appliance #{Id} updated by admin", id);
             return CommandResult.Ok($"Appliance #{id} updated successfully.");
         }
-        catch (ApplianceNotFoundException ex) { return CommandResult.Fail(ex.Message); }
+        catch (ValidationException ex)         { return CommandResult.Fail(ex.Message); }
+        catch (ApplianceNotFoundException ex)  { return CommandResult.Fail(ex.Message); }
         catch (DuplicateApplianceException ex) { return CommandResult.Fail(ex.Message); }
-        catch (CategoryNotFoundException ex) { return CommandResult.Fail(ex.Message); }
+        catch (CategoryNotFoundException ex)   { return CommandResult.Fail(ex.Message); }
+        catch (PersistenceException ex)        { return CommandResult.Fail(ex.Message); }
     }
 }

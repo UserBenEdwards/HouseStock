@@ -1,6 +1,6 @@
 namespace Domain.Exceptions;
 
-public class CategoryNotFoundException : Exception
+public class CategoryNotFoundException : HousestockException
 {
     public CategoryNotFoundException(string name)
         : base($"Category '{name}' was not found.") { }

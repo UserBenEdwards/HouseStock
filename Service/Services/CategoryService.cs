@@ -1,6 +1,7 @@
 using Domain.Entities;
 using Domain.Exceptions;
 using Domain.Interfaces;
+using Domain.Validation;
 using Microsoft.Extensions.Logging;
 using Service.DTOs;
 using Service.Interfaces;
@@ -16,6 +17,11 @@ public class CategoryService(
 
     public async Task AddAsync(AddCategoryRequest request)
     {
+        Validator<AddCategoryRequest>.For(request)
+            .NotNullOrEmpty(r => r.Name, "Name")
+            .MaxLength(r => r.Name, 100, "Name")
+            .Validate();
+
         if (await categoryRepository.ExistsAsync(request.Name))
         {
             logger.LogWarning("Duplicate category name: '{Name}'", request.Name);
@@ -33,6 +39,11 @@ public class CategoryService(
 
     public async Task UpdateAsync(UpdateCategoryRequest request)
     {
+        Validator<UpdateCategoryRequest>.For(request)
+            .NotNullOrEmpty(r => r.Name, "Name")
+            .MaxLength(r => r.Name, 100, "Name")
+            .Validate();
+
         var category = await categoryRepository.GetByIdAsync(request.Id);
         if (category is null)
         {

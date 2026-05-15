@@ -1,6 +1,6 @@
 namespace Domain.Exceptions;
 
-public class ApplianceNotFoundException : Exception
+public class ApplianceNotFoundException : HousestockException
 {
     public int Id { get; }
 

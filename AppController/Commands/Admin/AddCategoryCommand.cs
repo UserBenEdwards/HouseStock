@@ -26,6 +26,7 @@ public class AddCategoryCommand(
             logger.LogInformation("Category '{Name}' created by admin", name);
             return CommandResult.Ok($"Category '{name}' created successfully.");
         }
-        catch (DuplicateApplianceException ex) { return CommandResult.Fail(ex.Message); }
+        catch (ValidationException ex)         { return CommandResult.Fail(ex.Message); }
+        catch (DuplicateCategoryException ex)  { return CommandResult.Fail(ex.Message); }
     }
 }

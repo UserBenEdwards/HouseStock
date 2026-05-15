@@ -1,6 +1,6 @@
 namespace Domain.Exceptions;
 
-public class DuplicateApplianceException : Exception
+public class DuplicateApplianceException : HousestockException
 {
     public string Name { get; }
 

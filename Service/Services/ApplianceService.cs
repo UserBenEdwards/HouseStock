@@ -2,6 +2,7 @@ using Domain.Entities;
 using Domain.Exceptions;
 using Domain.Interfaces;
 using Domain.Specifications;
+using Domain.Validation;
 using Microsoft.Extensions.Logging;
 using Service.DTOs;
 using Service.Interfaces;
@@ -46,6 +47,12 @@ public class ApplianceService(
 
     public async Task AddAsync(AddApplianceRequest request)
     {
+        Validator<AddApplianceRequest>.For(request)
+            .NotNullOrEmpty(r => r.Name, "Name")
+            .MaxLength(r => r.Name, 100, "Name")
+            .GreaterThan(r => r.Price, 0, "Price")
+            .Validate();
+
         if (await applianceRepository.ExistsAsync(request.Name))
         {
             logger.LogWarning("Duplicate appliance name: '{Name}'", request.Name);
@@ -53,7 +60,7 @@ public class ApplianceService(
         }
 
         int? categoryId = null;
-        if (request.CategoryName is not null)
+        if (!string.IsNullOrWhiteSpace(request.CategoryName))
         {
             var category = await categoryRepository.GetByNameAsync(request.CategoryName);
             if (category is null)
@@ -73,12 +80,24 @@ public class ApplianceService(
             CategoryId = categoryId
         };
 
-        await applianceRepository.AddAsync(appliance);
+        try
+        {
+            await applianceRepository.AddAsync(appliance);
+        }
+        catch (HousestockException) { throw; }
+        catch (Exception ex) { throw new PersistenceException("Failed to save appliance.", ex); }
+
         logger.LogInformation("Appliance '{Name}' added (price: {Price})", appliance.Name, appliance.Price);
     }
 
     public async Task UpdateAsync(UpdateApplianceRequest request)
     {
+        Validator<UpdateApplianceRequest>.For(request)
+            .NotNullOrEmpty(r => r.Name, "Name")
+            .MaxLength(r => r.Name, 100, "Name")
+            .GreaterThan(r => r.Price, 0, "Price")
+            .Validate();
+
         var appliance = await applianceRepository.GetByIdAsync(request.Id);
         if (appliance is null)
         {
@@ -94,7 +113,7 @@ public class ApplianceService(
         }
 
         int? categoryId = null;
-        if (request.CategoryName is not null)
+        if (!string.IsNullOrWhiteSpace(request.CategoryName))
         {
             var category = await categoryRepository.GetByNameAsync(request.CategoryName);
             if (category is null)
@@ -111,7 +130,13 @@ public class ApplianceService(
         appliance.Price = request.Price;
         appliance.CategoryId = categoryId;
 
-        await applianceRepository.UpdateAsync(appliance);
+        try
+        {
+            await applianceRepository.UpdateAsync(appliance);
+        }
+        catch (HousestockException) { throw; }
+        catch (Exception ex) { throw new PersistenceException("Failed to update appliance.", ex); }
+
         logger.LogInformation("Appliance #{Id} updated", appliance.Id);
     }
 
