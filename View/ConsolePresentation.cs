@@ -36,6 +36,8 @@ public class ConsolePresentation(
                 result = await HandleUpdateCategoryAsync(input);
             else if (input.StartsWith("delete-category ", StringComparison.OrdinalIgnoreCase) && session.IsAdmin)
                 result = await HandleDeleteCategoryAsync(input);
+            else if (input.StartsWith("delete ", StringComparison.OrdinalIgnoreCase) && session.IsAdmin)
+                result = await HandleDeleteApplianceAsync(input);
             else if (input.Equals("switch admin", StringComparison.OrdinalIgnoreCase))
                 result = await HandleSwitchAdminAsync();
             else
@@ -155,16 +157,47 @@ public class ConsolePresentation(
         });
     }
 
+    private async Task<CommandResult> HandleDeleteApplianceAsync(string input)
+    {
+        var parts = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length < 2 || !int.TryParse(parts[1], out var id))
+            return CommandResult.Fail("Invalid ID. Usage: delete <id>");
+
+        var showResult = await controller.ExecuteAsync($"show {id}");
+        if (!showResult.Success)
+            return showResult;
+
+        var appliance = showResult.Data as Appliance;
+        var displayName = appliance?.Name ?? $"#{id}";
+
+        Console.Write($"\n  Are you sure you want to delete '{displayName}'? (y/N): ");
+        var confirm = Console.ReadLine()?.Trim().ToLower();
+        if (confirm != "y")
+            return CommandResult.Ok("Deletion cancelled.");
+
+        return await controller.ExecuteWithArgsAsync("delete", new Dictionary<string, string>
+        {
+            ["id"] = id.ToString()
+        });
+    }
+
     private async Task<CommandResult> HandleDeleteCategoryAsync(string input)
     {
         var parts = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         if (parts.Length < 2 || !int.TryParse(parts[1], out var id))
             return CommandResult.Fail("Invalid ID. Usage: delete-category <id>");
 
-        Console.Write($"\n  Are you sure you want to delete category #{id}? (y/N): ");
+        var listResult = await controller.ExecuteAsync("categories");
+        var category = (listResult.Data as IEnumerable<ApplianceCategory>)
+            ?.FirstOrDefault(c => c.Id == id);
+
+        if (category is null)
+            return CommandResult.Fail($"Category #{id} not found.");
+
+        Console.Write($"\n  Are you sure you want to delete '{category.Name}'? (y/N): ");
         var confirm = Console.ReadLine()?.Trim().ToLower();
         if (confirm != "y")
-            return CommandResult.Fail("Deletion cancelled.");
+            return CommandResult.Ok("Deletion cancelled.");
 
         return await controller.ExecuteWithArgsAsync("delete-category", new Dictionary<string, string>
         {
