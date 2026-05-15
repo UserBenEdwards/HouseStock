@@ -103,6 +103,19 @@ dotnet test
 
 ---
 
+## Multiple Implementations
+
+`IApplianceRepository` has two implementations in the Infrastructure layer:
+
+| Class | Storage | When used |
+|-------|---------|-----------|
+| `ApplianceRepository` | MySQL via EF Core | Production (`AppMain`) |
+| `InMemoryApplianceRepository` | `List<Appliance>` in RAM | Testing / offline mode |
+
+Both implement the same `IApplianceRepository` interface — the service layer is unaware of which one is injected. Swapping implementations requires only a single DI registration change.
+
+---
+
 ## Connection Pooling
 
 MySQL connection pooling is configured in `appsettings.json` via the connection string:
