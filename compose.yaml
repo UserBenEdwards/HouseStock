@@ -12,5 +12,19 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
     restart: unless-stopped
+
+  seq:
+    image: datalust/seq:latest
+    container_name: seq_logs
+    environment:
+      ACCEPT_EULA: "Y"
+    ports:
+      - "5341:5341"   # Serilog sink endpoint
+      - "8080:80"     # Seq web UI  →  http://localhost:8080
+    volumes:
+      - seq_data:/data
+    restart: unless-stopped
+
 volumes:
   mysql_data:
+  seq_data:
