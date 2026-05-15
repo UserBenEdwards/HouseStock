@@ -140,6 +140,20 @@ public class ApplianceService(
         logger.LogInformation("Appliance #{Id} updated", appliance.Id);
     }
 
+    public async Task<WarehouseStats> GetStatsAsync()
+    {
+        var appliances = (await applianceRepository.GetAllAsync()).ToList();
+        var categories = await categoryRepository.GetAllAsync();
+
+        return new WarehouseStats(
+            TotalAppliances: appliances.Count,
+            TotalCategories: categories.Count(),
+            MinPrice: appliances.Count > 0 ? appliances.Min(a => a.Price) : null,
+            MaxPrice: appliances.Count > 0 ? appliances.Max(a => a.Price) : null,
+            AvgPrice: appliances.Count > 0 ? Math.Round(appliances.Average(a => a.Price), 2) : null
+        );
+    }
+
     public async Task DeleteAsync(int id)
     {
         var appliance = await applianceRepository.GetByIdAsync(id);

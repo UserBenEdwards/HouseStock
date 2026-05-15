@@ -48,6 +48,7 @@ public abstract class IntegrationTestBase
         services.AddTransient<FindCommand>();
         services.AddTransient<ShowCommand>();
         services.AddTransient<CostCommand>();
+        services.AddTransient<StatsCommand>();
         services.AddTransient<HelpCommand>();
         services.AddTransient<ListCategoriesCommand>();
         services.AddTransient<SwitchToAdminCommand>();

@@ -1,4 +1,5 @@
 using Domain.Entities;
+using Service.DTOs;
 
 namespace View.Renderer;
 
@@ -90,6 +91,20 @@ public static class ApplianceRenderer
 
         Console.WriteLine("  " + new string('-', 55));
         Console.WriteLine($"  Total: {list.Count} category(ies)");
+    }
+
+    public static void RenderStats(WarehouseStats stats)
+    {
+        const int w = 36;
+        var sep = "  " + new string('-', w);
+        Console.WriteLine(sep);
+        Console.WriteLine($"  {"Appliances",-20}: {stats.TotalAppliances}");
+        Console.WriteLine($"  {"Categories",-20}: {stats.TotalCategories}");
+        Console.WriteLine(sep);
+        Console.WriteLine($"  {"Min price",-20}: {(stats.MinPrice.HasValue ? $"${stats.MinPrice:N2}" : "—")}");
+        Console.WriteLine($"  {"Max price",-20}: {(stats.MaxPrice.HasValue ? $"${stats.MaxPrice:N2}" : "—")}");
+        Console.WriteLine($"  {"Avg price",-20}: {(stats.AvgPrice.HasValue  ? $"${stats.AvgPrice:N2}"  : "—")}");
+        Console.WriteLine(sep);
     }
 
     private static string Truncate(string value, int max) =>

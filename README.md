@@ -82,6 +82,7 @@ dotnet test
 | `find <category> price=min;max` | Filter by category and price |
 | `show <id>` | Show appliance details |
 | `cost <min> <max>` | Appliances in price range |
+| `stats` | Warehouse statistics (totals, min/max/avg price) |
 | `categories` | List all categories |
 | `help` | Show available commands |
 | `switch admin` | Prompt for admin password |
@@ -100,6 +101,25 @@ dotnet test
 | `switch user` | Return to USER mode |
 
 > Deleting a category does **not** delete its appliances — their `CategoryId` is set to `NULL`.
+
+---
+
+## Connection Pooling
+
+MySQL connection pooling is configured in `appsettings.json` via the connection string:
+
+```json
+"DefaultConnection": "...;Minimum Pool Size=2;Maximum Pool Size=100;Connection Lifetime=300;Pooling=true"
+```
+
+| Parameter | Value | Description |
+|-----------|-------|-------------|
+| `Minimum Pool Size` | 2 | Connections kept open at all times |
+| `Maximum Pool Size` | 100 | Hard cap on concurrent connections |
+| `Connection Lifetime` | 300 s | Max age of a connection before it is recycled |
+| `Pooling` | true | Explicitly enables pooling (MySqlConnector) |
+
+Pooling is handled by **MySqlConnector** (used internally by Pomelo.EntityFrameworkCore.MySql). No application-level code changes are required.
 
 ---
 

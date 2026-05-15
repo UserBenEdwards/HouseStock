@@ -13,6 +13,7 @@ public class HelpCommand : ICommand
           find all price=min;max    — Find appliances by price range
           cost <min> <max>          — Find appliances by price range
           show <id>                 — Show appliance details by ID
+          stats                     — Show warehouse statistics
 
         Mode commands:
           switch admin              — Switch to admin mode

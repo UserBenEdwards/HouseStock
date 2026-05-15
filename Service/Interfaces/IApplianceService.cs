@@ -12,4 +12,5 @@ public interface IApplianceService
     Task AddAsync(AddApplianceRequest request);
     Task UpdateAsync(UpdateApplianceRequest request);
     Task DeleteAsync(int id);
+    Task<WarehouseStats> GetStatsAsync();
 }

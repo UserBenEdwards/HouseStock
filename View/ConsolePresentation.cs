@@ -293,6 +293,11 @@ public class ConsolePresentation(
             Console.WriteLine($"\n  {result.Message}");
             ApplianceRenderer.RenderCategoryTable(categories);
         }
+        else if (result.Data is Service.DTOs.WarehouseStats stats)
+        {
+            Console.WriteLine($"\n  {result.Message}");
+            ApplianceRenderer.RenderStats(stats);
+        }
         else
         {
             Console.ForegroundColor = ConsoleColor.Green;
