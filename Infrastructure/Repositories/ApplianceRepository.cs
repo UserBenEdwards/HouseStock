@@ -21,31 +21,6 @@ public class ApplianceRepository(
         return result;
     }
 
-    public async Task<IEnumerable<Appliance>> GetByCategoryNameAsync(string categoryName)
-    {
-        var result = await context.Appliances
-            .Include(a => a.Category)
-            .AsNoTracking()
-            .Where(a => a.Category != null &&
-                        a.Category.Name.ToLower() == categoryName.ToLower())
-            .ToListAsync();
-
-        logger.LogDebug("GetByCategoryNameAsync('{Category}') returned {Count} appliances", categoryName, result.Count);
-        return result;
-    }
-
-    public async Task<IEnumerable<Appliance>> GetByPriceRangeAsync(decimal min, decimal max)
-    {
-        var result = await context.Appliances
-            .Include(a => a.Category)
-            .AsNoTracking()
-            .Where(a => a.Price >= min && a.Price <= max)
-            .ToListAsync();
-
-        logger.LogDebug("GetByPriceRangeAsync({Min}, {Max}) returned {Count} appliances", min, max, result.Count);
-        return result;
-    }
-
     public async Task<Appliance?> GetByIdAsync(int id)
     {
         return await context.Appliances
@@ -72,7 +47,9 @@ public class ApplianceRepository(
     public async Task UpdateAsync(Appliance appliance)
     {
         appliance.UpdatedAt = DateTime.UtcNow;
-        context.Appliances.Update(appliance);
+        var tracked = await context.Appliances.FindAsync(appliance.Id);
+        if (tracked is null) return;
+        context.Entry(tracked).CurrentValues.SetValues(appliance);
         await context.SaveChangesAsync();
         logger.LogDebug("Appliance #{Id} updated in database", appliance.Id);
     }

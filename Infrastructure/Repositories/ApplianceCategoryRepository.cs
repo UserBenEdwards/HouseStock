@@ -57,7 +57,9 @@ public class ApplianceCategoryRepository(
     public async Task UpdateAsync(ApplianceCategory category)
     {
         category.UpdatedAt = DateTime.UtcNow;
-        context.ApplianceCategories.Update(category);
+        var tracked = await context.ApplianceCategories.FindAsync(category.Id);
+        if (tracked is null) return;
+        context.Entry(tracked).CurrentValues.SetValues(category);
         await context.SaveChangesAsync();
         logger.LogDebug("Category #{Id} updated in database", category.Id);
     }

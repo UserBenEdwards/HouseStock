@@ -1,6 +1,7 @@
 using Domain.Entities;
 using Domain.Exceptions;
 using Domain.Interfaces;
+using Domain.Specifications;
 using Microsoft.Extensions.Logging;
 using Service.DTOs;
 using Service.Interfaces;
@@ -19,12 +20,16 @@ public class ApplianceService(
 
     public async Task<IEnumerable<Appliance>> GetByCategoryNameAsync(string categoryName)
     {
-        return await applianceRepository.GetByCategoryNameAsync(categoryName);
+        var all = await applianceRepository.GetAllAsync();
+        var spec = new ByCategorySpecification(categoryName);
+        return all.Where(spec.IsSatisfiedBy);
     }
 
     public async Task<IEnumerable<Appliance>> GetByPriceRangeAsync(decimal min, decimal max)
     {
-        return await applianceRepository.GetByPriceRangeAsync(min, max);
+        var all = await applianceRepository.GetAllAsync();
+        var spec = new PriceRangeSpecification(min, max);
+        return all.Where(spec.IsSatisfiedBy);
     }
 
     public async Task<Appliance> GetByIdAsync(int id)

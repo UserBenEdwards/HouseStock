@@ -83,8 +83,8 @@ public class ApplianceServiceTests
         };
 
         _repoMock
-            .Setup(r => r.GetByPriceRangeAsync(min, max))
-            .ReturnsAsync(appliances.Where(a => a.Price >= min && a.Price <= max).ToList());
+            .Setup(r => r.GetAllAsync())
+            .ReturnsAsync(appliances);
 
         var result = await CreateService().GetByPriceRangeAsync(min, max);
 
