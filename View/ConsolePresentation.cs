@@ -1,15 +1,13 @@
 using AppController;
 using AppController.Controllers;
 using Domain.Entities;
-using Service.Interfaces;
 using View.Renderer;
 
 namespace View;
 
 public class ConsolePresentation(
     QueryController controller,
-    AppSession session,
-    ICategoryService categoryService)
+    AppSession session)
 {
     public async Task RunAsync()
     {
@@ -167,7 +165,9 @@ public class ConsolePresentation(
 
     private async Task<string> PickCategoryAsync(bool allowSkip = false)
     {
-        var categories = (await categoryService.GetAllAsync()).ToList();
+        var categoriesResult = await controller.ExecuteAsync("categories");
+        var categories = (categoriesResult.Data as IEnumerable<ApplianceCategory>)?.ToList()
+                         ?? new List<ApplianceCategory>();
 
         if (categories.Count == 0)
         {
