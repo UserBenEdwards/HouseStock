@@ -1,3 +1,4 @@
+using System.Globalization;
 using AppController.Commands;
 using Service.Interfaces;
 
@@ -10,8 +11,8 @@ public class FindCommand(IApplianceService applianceService) : ICommand
         // find all price=min;max
         if (request.Get("filter") == "price")
         {
-            if (!decimal.TryParse(request.Get("min"), out var min) ||
-                !decimal.TryParse(request.Get("max"), out var max))
+            if (!decimal.TryParse(request.Get("min"), NumberStyles.Number, CultureInfo.InvariantCulture, out var min) ||
+                !decimal.TryParse(request.Get("max"), NumberStyles.Number, CultureInfo.InvariantCulture, out var max))
                 return CommandResult.Fail("Invalid price range. Usage: find all price=10;500");
 
             var byPrice = await applianceService.GetByPriceRangeAsync(min, max);
