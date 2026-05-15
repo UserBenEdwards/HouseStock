@@ -1,11 +1,15 @@
 using AppController.Commands;
 using Domain.Exceptions;
+using Microsoft.Extensions.Logging;
 using Service.DTOs;
 using Service.Interfaces;
 
 namespace AppController.Commands.Admin;
 
-public class UpdateCategoryCommand(ICategoryService categoryService, AppSession session) : ICommand
+public class UpdateCategoryCommand(
+    ICategoryService categoryService,
+    AppSession session,
+    ILogger<UpdateCategoryCommand> logger) : ICommand
 {
     public async Task<CommandResult> ExecuteAsync(ParsedRequest request)
     {
@@ -22,6 +26,7 @@ public class UpdateCategoryCommand(ICategoryService categoryService, AppSession 
         try
         {
             await categoryService.UpdateAsync(new UpdateCategoryRequest(id, name, request.Get("description")));
+            logger.LogInformation("Category #{Id} updated by admin", id);
             return CommandResult.Ok($"Category #{id} updated successfully.");
         }
         catch (CategoryNotFoundException ex) { return CommandResult.Fail(ex.Message); }

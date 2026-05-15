@@ -1,10 +1,14 @@
 using AppController.Commands;
 using Domain.Exceptions;
+using Microsoft.Extensions.Logging;
 using Service.Interfaces;
 
 namespace AppController.Commands.Admin;
 
-public class DeleteApplianceCommand(IApplianceService applianceService, AppSession session) : ICommand
+public class DeleteApplianceCommand(
+    IApplianceService applianceService,
+    AppSession session,
+    ILogger<DeleteApplianceCommand> logger) : ICommand
 {
     public async Task<CommandResult> ExecuteAsync(ParsedRequest request)
     {
@@ -17,6 +21,7 @@ public class DeleteApplianceCommand(IApplianceService applianceService, AppSessi
         try
         {
             await applianceService.DeleteAsync(id);
+            logger.LogInformation("Appliance #{Id} deleted by admin", id);
             return CommandResult.Ok($"Appliance #{id} deleted successfully.");
         }
         catch (ApplianceNotFoundException ex)

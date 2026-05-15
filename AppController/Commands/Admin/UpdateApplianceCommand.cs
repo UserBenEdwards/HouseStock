@@ -1,11 +1,15 @@
 using AppController.Commands;
 using Domain.Exceptions;
+using Microsoft.Extensions.Logging;
 using Service.DTOs;
 using Service.Interfaces;
 
 namespace AppController.Commands.Admin;
 
-public class UpdateApplianceCommand(IApplianceService applianceService, AppSession session) : ICommand
+public class UpdateApplianceCommand(
+    IApplianceService applianceService,
+    AppSession session,
+    ILogger<UpdateApplianceCommand> logger) : ICommand
 {
     public async Task<CommandResult> ExecuteAsync(ParsedRequest request)
     {
@@ -34,6 +38,7 @@ public class UpdateApplianceCommand(IApplianceService applianceService, AppSessi
                 CategoryName: request.Get("category")
             ));
 
+            logger.LogInformation("Appliance #{Id} updated by admin", id);
             return CommandResult.Ok($"Appliance #{id} updated successfully.");
         }
         catch (ApplianceNotFoundException ex) { return CommandResult.Fail(ex.Message); }

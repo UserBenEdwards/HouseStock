@@ -1,10 +1,14 @@
 using AppController.Commands;
 using Domain.Exceptions;
+using Microsoft.Extensions.Logging;
 using Service.Interfaces;
 
 namespace AppController.Commands.Admin;
 
-public class DeleteCategoryCommand(ICategoryService categoryService, AppSession session) : ICommand
+public class DeleteCategoryCommand(
+    ICategoryService categoryService,
+    AppSession session,
+    ILogger<DeleteCategoryCommand> logger) : ICommand
 {
     public async Task<CommandResult> ExecuteAsync(ParsedRequest request)
     {
@@ -17,9 +21,9 @@ public class DeleteCategoryCommand(ICategoryService categoryService, AppSession 
         try
         {
             await categoryService.DeleteAsync(id);
+            logger.LogInformation("Category #{Id} deleted by admin", id);
             return CommandResult.Ok($"Category #{id} deleted successfully.");
         }
         catch (CategoryNotFoundException ex) { return CommandResult.Fail(ex.Message); }
-        catch (CategoryHasAppliancesException ex) { return CommandResult.Fail(ex.Message); }
     }
 }

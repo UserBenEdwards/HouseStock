@@ -1,11 +1,15 @@
 using AppController.Commands;
 using Domain.Exceptions;
+using Microsoft.Extensions.Logging;
 using Service.DTOs;
 using Service.Interfaces;
 
 namespace AppController.Commands.Admin;
 
-public class AddCategoryCommand(ICategoryService categoryService, AppSession session) : ICommand
+public class AddCategoryCommand(
+    ICategoryService categoryService,
+    AppSession session,
+    ILogger<AddCategoryCommand> logger) : ICommand
 {
     public async Task<CommandResult> ExecuteAsync(ParsedRequest request)
     {
@@ -19,6 +23,7 @@ public class AddCategoryCommand(ICategoryService categoryService, AppSession ses
         try
         {
             await categoryService.AddAsync(new AddCategoryRequest(name, request.Get("description")));
+            logger.LogInformation("Category '{Name}' created by admin", name);
             return CommandResult.Ok($"Category '{name}' created successfully.");
         }
         catch (DuplicateApplianceException ex) { return CommandResult.Fail(ex.Message); }
