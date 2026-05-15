@@ -2,16 +2,22 @@ using Domain.Entities;
 using Domain.Interfaces;
 using Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Repositories;
 
-public class ApplianceCategoryRepository(AppDbContext context) : IApplianceCategoryRepository
+public class ApplianceCategoryRepository(
+    AppDbContext context,
+    ILogger<ApplianceCategoryRepository> logger) : IApplianceCategoryRepository
 {
     public async Task<IEnumerable<ApplianceCategory>> GetAllAsync()
     {
-        return await context.ApplianceCategories
+        var result = await context.ApplianceCategories
             .AsNoTracking()
             .ToListAsync();
+
+        logger.LogDebug("GetAllAsync returned {Count} categories", result.Count);
+        return result;
     }
 
     public async Task<ApplianceCategory?> GetByIdAsync(int id)
@@ -45,6 +51,7 @@ public class ApplianceCategoryRepository(AppDbContext context) : IApplianceCateg
         category.UpdatedAt = DateTime.UtcNow;
         await context.ApplianceCategories.AddAsync(category);
         await context.SaveChangesAsync();
+        logger.LogDebug("Category #{Id} '{Name}' saved to database", category.Id, category.Name);
     }
 
     public async Task UpdateAsync(ApplianceCategory category)
@@ -52,6 +59,7 @@ public class ApplianceCategoryRepository(AppDbContext context) : IApplianceCateg
         category.UpdatedAt = DateTime.UtcNow;
         context.ApplianceCategories.Update(category);
         await context.SaveChangesAsync();
+        logger.LogDebug("Category #{Id} updated in database", category.Id);
     }
 
     public async Task DeleteAsync(int id)
@@ -60,5 +68,6 @@ public class ApplianceCategoryRepository(AppDbContext context) : IApplianceCateg
         if (category is null) return;
         context.ApplianceCategories.Remove(category);
         await context.SaveChangesAsync();
+        logger.LogDebug("Category #{Id} removed from database", id);
     }
 }
