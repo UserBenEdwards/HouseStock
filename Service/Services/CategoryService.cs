@@ -19,7 +19,7 @@ public class CategoryService(
         if (await categoryRepository.ExistsAsync(request.Name))
         {
             logger.LogWarning("Duplicate category name: '{Name}'", request.Name);
-            throw new DuplicateApplianceException(request.Name);
+            throw new DuplicateCategoryException(request.Name);
         }
 
         await categoryRepository.AddAsync(new ApplianceCategory
@@ -44,7 +44,7 @@ public class CategoryService(
             && await categoryRepository.ExistsAsync(request.Name))
         {
             logger.LogWarning("Duplicate category name on update: '{Name}'", request.Name);
-            throw new DuplicateApplianceException(request.Name);
+            throw new DuplicateCategoryException(request.Name);
         }
 
         category.Name = request.Name;
